@@ -1,0 +1,61 @@
+Qestion 2a
+To solve this question, "wget" is used to download the file. Then, "grep" is used to generate two csv.file, one is for countries, another one is for regions.
+In the countries.csv,  "sed" is used to delete the double quotas. Sort is used to find the top five countries with highest harvested area. And function AHrate()
+is introduced to find the top five countries in different years. Moreover, a function is produced to download data based on "if then else".
+
+CODE:
+gohhy@DESKTOP-9C8GB9K:~$ cd ~/ps1   #go the directory ps1
+
+gohhy@DESKTOP-9C8GB9K:~/ps1$ wget -O data.zip "http://data.un.org/Handlers/
+DownloadHandler.ashx?DataFilter=itemCode:526&DataMartId=FAO&Format=csv&c=2,3
+,4,5,6,7&s=countryName:asc,elementCode:asc,year:desc"                              #to download the data  file
+
+gohhy@DESKTOP-9C8GB9K:~/ps1$ unzip data.zip                                        #unzip the file
+
+gohhy@DESKTOP-9C8GB9K:~/ps1$ grep + UNdata_Export_20170907_081302854.csv >>regions.csv       #extract the regions and create a file
+
+gohhy@DESKTOP-9C8GB9K:~/ps1$ grep -v + UNdata_Export_20170907_081302854.csv                 #extract the countries and create a file
+>>countries.csv
+
+gohhy@DESKTOP-9C8GB9K:~/ps1$ sed -e 's/"//g' countries.csv >>countries1.csv                  #remove the double quotas in the file
+
+gohhy@DESKTOP-9C8GB9K:~/ps1$ grep 'Area Harvested' countries1.csv | grep 2005 | sort -n -r -t\, -k 6,6 | head -n 5       #print out the top five countries with highest harvested area in 2005
+
+gohhy@DESKTOP-9C8GB9K:~/ps1$ function AHrate() { grep 'Area Harvested' countries1.csv | grep $1 | sort -n -r -t\, -k 6,6 | head -n 5; }   #set a function to find the top five countries with highest harvested area in different year
+
+gohhy@DESKTOP-9C8GB9K:~/ps1$ AHrate 1965    #print out the top five countries with highest harvested area in 1965
+
+gohhy@DESKTOP-9C8GB9K:~/ps1$ AHrate 1975     #print out the top five countries with highest harvested area in 1975
+
+gohhy@DESKTOP-9C8GB9K:~/ps1$ AHrate 1985      #print out the top five countries with highest harvested area in 1985
+
+gohhy@DESKTOP-9C8GB9K:~/ps1$ AHrate 1995      #print out the top five countries with highest harvested area in 1995
+
+gohhy@DESKTOP-9C8GB9K:~/ps1$ AHrate 2005       #print out the top five countries with highest harvested area in 2005
+
+Qestion 2b
+
+gohhy@DESKTOP-9C8GB9K:~/ps1$ function myfun() { if [ "$a" == "526" ]; then w
+get -O data.zip "http://data.un.org/Handlers/DownloadHandler.ashx?DataFilter
+=itemCode:526&DataMartId=FAO&Format=csv&c=2,3,4,5,6,7&s=countryName:asc,elem
+entCode:asc,year:desc"; unzip data.zip; cat data.zip; elif [ "$a" == "-h" ];
+ then echo "please input 526 for apricots"; else echo " wrong message"; fi;
+}
+
+Question 3
+
+To download all the .txt file. The first step is to download the .html file. Then, "grep" is used to extract the name of .txt files.
+The third step is to use "sed" to do substitution to get the exact url. In the end, "wget -i" is used to download a list of url.
+
+gohhy@DESKTOP-9C8GB9K:~/ps1$ wget https://www1.ncdc.noaa.gov/pub/data/ghcn/daily/     #download the html file
+
+gohhy@DESKTOP-9C8GB9K:~/ps1$ less index.html                         # to see what is in the file
+
+gohhy@DESKTOP-9C8GB9K:~/ps1$ grep -o 'a href=.*.txt\"' index.html >>list.txt      # to extract the information including .txt file name
+
+gohhy@DESKTOP-9C8GB9K:~/ps1$ sed -i 's/a href="/https:\/\/www1.ncdc.noaa.gov\/pub\/data\/ghcn\/daily\//g' list.txt > list1.txt # to replace "a href" to the first part of url
+
+gohhy@DESKTOP-9C8GB9K:~/ps1$ sed -i 's/\"//g' list.txt      #to replace """ to space
+
+gohhy@DESKTOP-9C8GB9K:~/ps1$ wget -i list.txt              # to download all the .txt files
+
