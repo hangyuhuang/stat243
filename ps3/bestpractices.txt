@@ -1,0 +1,24 @@
+Comments:
+The purpose of scientific computing is to assist scientist to do research. So it is important to build, check and use it carefully as any physical apparatus. And moreover, the software is ofen used for many projects. So the software should be reliable, readable, and easy to opearte. The programs are writen by people and to serve for people. Based on my understanding of this paper, programmer and user are two types of people who will read and use the program. To make it readable, the practices such as break programs up into functions, and using a naming system helps a lot. To improve the effectiveness, there are several practices:
+1. Let computer to do the repeat tasks: save the recent commands in a file for reuse, use a build tool to automate scientific workflows.
+2. Use the "history" command to save recent commands 
+3.work in samll steps with frequent feedback and course correction
+4. use version control to keep track of changes , such as git. Everything that has been created manually will be put in version control.
+5. Dont repeat yourself (DRY Principle), every piece of data must have a single authoritative represenattion in the system. Every location where data was collected should be recorded once and given an ID. 
+6. Mistakes are inevitable, so it is important to plan for mistakes. Adding assertions to programs is a good way to cheack it and explain it. programmers should use the automated testing for every single unit and use an off-the-shelf unit library to initialize inputs, run tests, and report their results in a uniform way. programmer should use a debugger (interactive program inspector) to witness what is going wrong directly. 
+7.To write the code corretly first, then optimize it-----write programs in the highest level language to save time
+8. Programmers should have reference ducumentations and descriptions of design decesions as they are key for improving the understandability of code. The documenatation fo a piece of softwae is better to be embed in the program.
+9. Code review are the most cost effective way of finding bugs. Pre-merge code review is recommended, pair programming is good way to improve productivity. AN issue tracking tool should be used for a big project.
+
+
+
+QUESTIONS
+1. What is assertion? How it works? Is it only a statement that to compare with the outcome of the program? If the outcome is the same as the statement, does it mean the program is corret?
+
+2. In the paper, test-driven development (TDD) is not advocated. May I know the key point of TDD is writing the tests before coding to clarify the purpose of the code in her own mind, and run the test cases after coding? If coding is suggested to work in small steps with frequent feedback and course correction, is it uselss to write the tests befor programming as it keeps changing?
+
+3.What is the difference between low level and high level language? In the paper, scientists are suggested to write code in the highest-level language possible, and programmers use the high-level language to be a test oracle for a high performamce low-level reimplementation. Am I correct that R or Python is a highlevel language?
+
+4. what is the off-the shelf unit library, like 'testthat' package in R?
+
+5. How to turn bugs into test cases?
