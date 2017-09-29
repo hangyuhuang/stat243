@@ -1,0 +1,198 @@
+---
+title: "PS3"
+author: "Hangyu Huang"
+date: "26 September 2017"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document.
+```{r original data}
+getwd()
+setwd("C:/Users/crypress/Desktop/243/ps3")
+url <- "http://www.gutenberg.org/cache/epub/100/pg100.txt"
+download.file(url, "shakespeare.txt")
+```
+```{r clear data}
+library(stringr)
+## loading required package: method
+
+spdata <- readLines("shakespeare.txt")
+spdata <- spdata[spdata != ""]
+## find the location of each play start with year and end with "THE END"
+
+location <- data.frame(beg=which(grepl("^[[:digit:]]{4}",spdata)), end=which(grepl("THE END",spdata)))
+## extract the text from the beginning loaction to the end location
+
+complworks <- lapply(seq_along(location$beg), function(i){
+  spdata[seq(from=location$beg[i],
+                   to = location$end[i],
+                   by=1)]
+  })
+
+
+## remove the frist and the last sonnet
+playsonly <- complworks[-c(1, 38)]
+
+```
+
+
+``` {r metadata of the plays of Shake Speare}
+# body of each play
+begin1 <- data.frame(begin=grep(regex("SCENE:"), spdata))
+begin2 <- data.frame(begin=grep(regex("Scene:"), spdata))
+begin3 <- data.frame(begin=grep(regex("SCENE.-"), spdata))
+begin <- rbind.data.frame(begin1,begin2,begin3)
+begin <- sort(begin$begin)
+end <- data.frame(end=grep("THE END", spdata))
+end <- end[-c(1, 38),]
+bodyloc <- cbind.data.frame(begin,end)
+body <- sapply(seq_along(bodyloc$begin), FUN = function(i) {
+  spdata[seq(from=bodyloc$begin[i],
+                   to = bodyloc$end[i],
+                   by=1)]
+})
+
+# year of plays
+year <- data.frame(year = sapply(playsonly, '[[', 1))
+
+#name of plays
+name <- data.frame(name = sapply(playsonly, '[[', 2))
+
+#number of scene for each play
+numofscene <- str_count(body, "SCENE | Scene") - 1
+numofscene <- data.frame(numofscene = numofscene)
+
+# number of ACT for each play
+numofACT1<- matrix(str_count(body, fixed("SCENE I.")),nrow =36,ncol =1)
+numofACT2<- matrix(str_count(body, fixed("SCENE 1")), nrow =36,ncol =1)
+numofACT3<- matrix(str_count(body, fixed("Scene I.")), nrow =36,ncol =1)
+numofACT <- numofACT1 + numofACT2 + numofACT3
+numofACT <- data.frame(numofACT = numofACT)
+
+#metadata of Shake Sperea's plays
+
+metadata <- cbind(name,year,numofACT, numofscene)
+```
+
+
+``` {r Chunks of each play}
+#functin to find the chunks in one play
+searchchunks <- function(x){
+play1 <- unlist(body[x])
+chunkbeg <- matrix(grep("  [A-Z]{4,}. ", play1), ncol=1)
+chunkend <- matrix(chunkbeg[-1]-1,nrow = (nrow(chunkbeg)-1))
+chunkbeg <- matrix(chunkbeg[-nrow(chunkbeg)],nrow = (nrow(chunkbeg)-1))
+chunkloc <- data.frame(begin=chunkbeg,end=chunkend)
+chunk1 <- (sapply(seq_along(chunkloc$begin), function(i){
+  paste(play1[seq(from=chunkloc$begin[i],
+                   to = chunkloc$end[i],
+                   by=1)])
+}))
+return(chunk1)
+}
+
+
+#list of chunks for each play
+index <-matrix(c(1:36),ncol = 1)
+chunks <- sapply(index, FUN = function(x) searchchunks(x))
+```
+
+```{r statistical analysis}
+# number of sentence per chunk
+Searchsentence <- function(x){
+   play1 <- chunks[[x]]
+  index <- matrix(c(1:length(play1)),ncol=1)
+  sentences <- sapply(index, function(i){
+  str_extract_all(play1[i], "\\. [A-Z]{1,}")
+})
+  numofsentence <- matrix(lengths(sentences), ncol=1)
+  return(numofsentence)
+}
+numofsentences <- sapply(index, FUN=function(x)Searchsentence(x))
+
+# number of word per chunk
+Searchwords <- function(x){
+   play1 <- chunks[[x]]
+  index <- matrix(c(1:length(play1)),ncol=1)
+  wordperchunk <- sapply(index, function(i){
+  str_extract_all(play1[i], " [a-z]{1,} ")
+})
+  wordsperchunk <- matrix(lengths(wordperchunk), ncol=1)
+  return(wordsperchunk)
+}
+wordsperchunk <- sapply(index, FUN=function(x)Searchwords(x))
+
+#average of word per chunk
+
+avewordperchunk <-sapply(index, function(x){
+  as.integer(mean(wordsperchunk[[x]], trim=0))
+       })
+ 
+#number of speakers per play
+speakers <- sapply(index, function(x){
+  str_extract_all(body[x], "  [A-Z]{4,}.")
+})
+speakers <- sapply(speakers,unique)
+numofspeakers <- matrix(lengths(speakers), ncol=1)
+
+#number of chunks per play
+numofchunks <- matrix(lengths(chunks), ncol=1)
+
+
+#number of unique word
+words <- sapply(index, function(x){
+  str_extract_all(body[x], " [a-z]{1,} ")
+})
+words <- sapply(words,unique)
+numofwords <- matrix(lengths(words), ncol=1)
+```
+
+
+
+```{r plot }
+#metadata
+metadata <- cbind(name,year,numofACT, numofscene, numofchunks,numofspeakers)
+print(metadata)
+
+#number of speakers for each play
+plot(numofspeakers, main = "NUM OF SPEAKERS PER PLAY")
+
+#number of chunks for each play
+plot(numofchunks, main = "NUM OF CHUNKS PER PLAY")
+```
+
+``` {r fields}
+```
+Fields of class:
+1. "name", a character list contains the name of each play
+2. "year", a numeric list contains the year of each play
+3. "speakers", a character list contains the speakers of each play
+4. "body", a character list conatains the chunks of each play
+``` {r methods}
+```
+Methods to process the text of the plays to produce the field 
+1. getname()
+# to get a matrix of names for each play from the original txt to produce 'name' field
+2. getyear()
+# to get a matrix of year for each play from the original txt to produce the 'year' field 
+3. getspeaker()
+# to get a matrix of speakers for each play from the original txt to produce the 'speakers' field
+4. getbody()
+# to get a matrix of main body for each play from the original txt to produce the 'body' field
+
+
+Methods to provide information to a user
+1. metadata()
+# to get a table of all the information including year, name, number of scene, number of speakers by combing related data.
+2. getgraph()
+# to provide the graph use plot() function of the summary anlysis results to users.
+3. print()
+# to print out the play user wanna see
