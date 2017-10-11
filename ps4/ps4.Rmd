@@ -1,0 +1,284 @@
+---
+title: "ps4"
+author: "Hangyu Huang"
+date: "10 October 2017"
+output: 
+  pdf_document: 
+    number_sections: yes
+    toc: yes
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+## Partner
+
+Partner: YUE HU
+
+## Problem 1(a)
+There is only one copy that exists of the vector 1:10 during the first execution of myFun(). 
+Based on the idea of copy on change, 
+copies of objects are not made until one of the objects is actually modified. 
+Since there is no change on vector 1:10, 
+"data" points to the same memory location as the original object "x". 
+
+## Problem 1(b)
+The serialized object size is actually twice of the size of object "x".
+It seems like that the function "serialize" serialized both "x" and "data" to a raw vector as this function can not recognize that "x" and "data" point to the same memory location.
+
+```{r problem 1 (b)}
+x <- 1:1e7 
+f <- function(input){ 
+        data <- input 
+        g <- function(param) return(param * data) 
+        return(g) 
+        } 
+myFun <- f(x) 
+bytes <- serialize(myFun,NULL)
+print(object.size(x))
+print(object.size(bytes))
+```
+
+## Problem 1 (c)
+Based on "lazy evaluation", when R matches user input arguments to formal argument names, 
+it does not (usually) evaluate the arguments until they are needed. 
+
+In this question, "x" is not copied until "myFun" is called at "myFun(3)", 
+however "x" has been already removed. 
+Therefore, R cannot find object 'x'.
+
+## Problem 1 (d)
+The resulting serialized closure is 888 bytes
+```{r problem 1 (d)}
+x <- 1:10 
+f <- function(data){ 
+        g <- function(param) return(param * data) 
+        return(g) 
+        } 
+myFun <- f(1:10) 
+rm(x) 
+data <- 100 
+myFun(3)
+bytes <- serialize(myFun,NULL)
+print(object.size(bytes))
+```
+
+## problem 2 (a)
+When an element of one of the vectors is modified, 
+R makes the change in place without creating a new list or a new vector.
+
+From the result, we can see that 2 vectors are in the same place. 
+```{r problem 2 (a)}
+library(pryr)
+tmp <- list(rnorm(1e7), rnorm(1e7))
+.Internal(inspect(tmp)) 
+mem_change(tmp[[1]][1] <- 1 )
+.Internal(inspect(tmp))
+```
+## problem 2 (b)
+There is no copy-on-change going on when I make a copy of the list. However, a copy of the relevant vector is made when a change is made to one of the vectors in one of the lists.
+
+From the result we can find that only the place of vector [1] of "copyofTmp" is changed and the memory is increased almost 80Mb, which is the size of one vector.
+```{r problem 2 (b)}
+library(pryr)
+mem_change(copyofTmp <- tmp)
+.Internal(inspect(tmp)) 
+.Internal(inspect(copyofTmp)) 
+mem_change(copyofTmp[[1]][1] <- 2 )
+.Internal(inspect(tmp)) 
+.Internal(inspect(copyofTmp))
+```
+## problem 2 (c)
+When the copy of a list of lists "lists", "copyofLists" is made, there is no copy-on-change going on. The two lists point to the same memory location.
+
+When an element is added to the second list, only one copy of the new vector is made for "copyofLists$B", there is no change for the rest of the two lists. 30Mb memory change takes place, which is the size of the added element.
+
+```{r problem 2 (c)}
+library(pryr)
+lists <- list(A = list(a = rnorm(1e7), b = rnorm(1e7)),
+              B = list(a = rnorm(1e6)))
+mem_change(copyofLists <- lists)
+.Internal(inspect(lists)) 
+.Internal(inspect(copyofLists)) 
+mem_change(copyofLists$B <- c(copyofLists$B, rnorm(1e6)))
+.Internal(inspect(lists)) 
+.Internal(inspect(copyofLists))
+```
+
+## problem 2 (d)
+We find that the two vectors in the list point to the memory location. so the real memory used is ~80Mb as can be seen with gc().
+
+object.size():This function merely provides a rough indication: it should be reasonably accurate for atomic vectors, but does not detect if elements of a list are shared, for example. 
+
+Therefore, object.size() count the memory of both elements in the list, which is two times of the real size.
+``` {r problem 2 (d)}
+gc() 
+tmp <- list()
+x <- rnorm(1e7) 
+tmp[[1]] <- x 
+tmp[[2]] <- x 
+.Internal(inspect(tmp)) 
+object.size(tmp) 
+gc()
+```
+
+## problem 3 original code
+To present the time the original code takes.
+
+```{r problem 3 original code}
+library(rbenchmark)
+load("C:/Users/crypress/Desktop/243/ps4prob3.Rda") # provides values for A, k, n
+ll <- function(Theta, A) {
+  sum.ind <- which(A==1, arr.ind=T)
+  logLik <- sum(log(Theta[sum.ind])) - sum(Theta)
+  return(logLik)
+}
+oneUpdate <- function(A, n, K, theta.old, thresh = 0.1) {
+  theta.old1 <- theta.old
+  Theta.old <- theta.old %*% t(theta.old)
+  L.old <- ll(Theta.old, A)
+  q <- array(0, dim = c(n, n, K))
+  for (i in 1:n) {
+    for (j in 1:n) {
+      for (z in 1:K) {
+        if (theta.old[i, z]*theta.old[j, z] == 0){
+          q[i, j, z] <- 0
+        } else {
+          q[i, j, z] <- theta.old[i, z]*theta.old[j, z] /
+            Theta.old[i, j]
+        }
+      }
+    }
+  }
+  theta.new <- theta.old
+  for (z in 1:K) {
+    theta.new[,z] <- rowSums(A*q[,,z])/sqrt(sum(A*q[,,z]))
+  }
+  Theta.new <- theta.new %*% t(theta.new)
+  L.new <- ll(Theta.new, A)
+  converge.check <- abs(L.new - L.old) < thresh
+  theta.new <- theta.new/rowSums(theta.new)
+  return(list(theta = theta.new, loglik = L.new,
+              converged = converge.check))
+}
+# initialize the parameters at random starting values
+temp <- matrix(runif(n*K), n, K)
+theta.init <- temp/rowSums(temp)
+# do single update and check the time
+print(system.time(out <- oneUpdate(A, n, K, theta.init)))
+```
+
+## problem 3 improved code
+To present the time the improved code takes.
+```{r problem 3 improved code}
+load("C:/Users/crypress/Desktop/243/ps4prob3.Rda") # provides values for A, k, n
+# change the name of the function from "ll" to "getlogLik" to show the application of this function
+getlogLik <- function(Theta, A) {
+  sum.ind <- which(A==1, arr.ind=T)
+  logLik <- sum(log(Theta[sum.ind])) - sum(Theta)
+  return(logLik)
+}
+oneUpdate <- function(A, n, K, theta.old, thresh = 0.1) {
+  # theta.old1 is removed as it is not used in the funtion
+  Theta.old <- theta.old %*% t(theta.old)
+  L.old <- getlogLik(Theta.old, A)
+  # instead of 3 dimentional array, a  2-D matrix is used to for q
+  q <- matrix(0, nrow = n,ncol = n)
+  theta.new <- theta.old
+  # instead of using a for loop, apply() is applied here
+  theta.new<- apply(matrix(1:K), 1, FUN = function(z) {
+    q <- theta.old[,z]%*% t(theta.old[,z])/Theta.old
+    theta.new[,z] <- rowSums(A*q)/sqrt(sum(A*q))
+  })
+  Theta.new <- theta.new %*% t(theta.new)
+  L.new <- getlogLik(Theta.new, A)
+  converge.check <- abs(L.new - L.old) < thresh
+  theta.new <- theta.new/rowSums(theta.new)
+  return(list(theta = theta.new, loglik = L.new,
+              converged = converge.check))
+}
+# initialize the parameters at random starting values
+temp <- matrix(runif(n*K), n, K)
+theta.init <- temp/rowSums(temp)
+# do single update and check the time
+out <- oneUpdate(A, n, K, theta.init)
+print(system.time(out <- oneUpdate(A, n, K, theta.init)))
+
+```
+## problem 4 (a) PIKK algorithm
+
+```{R problem 4 PIKK algorithm}
+# PIKK algorithm
+library(microbenchmark)
+PIKK <- function(x, k) {
+  sort(runif(length(x)), 
+         index.return = TRUE)$ix[1:k]
+}
+
+# improved PIKK algorithm
+newPIKK <- function(x, k) {
+  order(runif(length(x)))[1:k]
+}
+
+# test and compare 
+orgTime <- list()
+newTime <- list()
+n <- c(0,1e2,1e3,1e4, 1e5)
+for (i in n){
+  x <- c(1:i)
+  k <- i/100
+  orgBenchm <- microbenchmark(PIKK(x,k))
+  newBenchm <- microbenchmark(newPIKK(x,k))
+  orgTime <- c(orgTime, mean(orgBenchm$time))
+  newTime<- c(newTime, mean(newBenchm$time))
+}
+plot(n,orgTime, type = "l", col = "red",
+     xlab = "n", ylab ="time")
+lines(n, newTime, col = "blue")
+```
+
+## Problem 4 (b) PYKD algorithm
+
+```{R problem 4 PYKD algorithm}
+# original FYKD algorithm
+FYKD <- function(x, k) { 
+  n <- length(x)
+  for(i in 1:k) {
+    j = sample(i:n, 1)
+    tmp <- x[i]
+    x[i] <- x[j]
+    x[j] <- tmp
+  }
+  return(x[1:k])
+}
+    
+
+# Improved FYKD algorithm
+newFYKD <- function(x, k) { 
+  n <- length(x)
+  y <- c(1:k)
+  idx <- sapply(y, function(x){
+    sample(i:n,1)})
+  for(i in 1:k) {
+    tmp <- x[i]
+    x[i] <- x[idx[i]]
+    x[idx[i]] <- tmp
+  }
+  return(x)
+}
+# test and compare 
+orgTime <- list()
+newTime <- list()
+n <- c(1e2,1e3,1e4, 1e5)
+for (i in n){
+  x <- c(1:i)
+  k <- i/100
+  orgBenchm <- microbenchmark(FYKD(x,k))
+  newBenchm <- microbenchmark(newFYKD(x,k))
+  orgTime <- c(orgTime, mean(orgBenchm$time))
+  newTime<- c(newTime, mean(newBenchm$time))
+}
+plot(n,orgTime, type = "l", col = "red",
+     xlab = "n", ylab ="time")
+lines(n, newTime, col = "blue")
+```
