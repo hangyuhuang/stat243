@@ -68,14 +68,14 @@ IntNew <- Int
 print(system.time(IntNew[40] <- 10L)) 
 # As Intnew is now different to Int, a real vevtor of integers copy is made.
 print(system.time(IntNew[1:5e7])) 
-#it shows the time to take a subset of size k ??? n/2 from an integer vector.
+#it shows the time to take a subset of size k=n/2 from an integer vector.
 
 # numeric case 
 Numrc <- Int
 print(system.time(Numrc[40] <- 10)) 
 # As Numrc is now different to Int, a real vevtor of numeric numbers copy is made.
 print(system.time(Numrc[1:5e7])) 
-# it shows the time to take a subset of size k ??? n/2 from a numeric vector of size n.
+# it shows the time to take a subset of size k=n/2 from a numeric vector of size n.
 ```
 ## Problem 4
 (a)
