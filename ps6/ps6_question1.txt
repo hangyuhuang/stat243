@@ -1,0 +1,58 @@
+• What are the goals of their simulation study and what are the metrics that they consider in assessing their method? 
+
+The goals of their simulation study are to investigate the finite sample properties of the test statistic 2LR*. 
+
+The metrics: 
+1. the number of components in a mixture distribution (k=1,2,3)
+2. sample sizes n = 50, 75, 100, 150, 200, 300, 400, 500 and 1000
+3. nominal level a = 0.01 and 0.05
+4. the simulated significance
+5. the simulated powers
+
+
+• What choices did the authors have to make in designing their simulation study? What are the key aspects of the data generating mechanism that likely affect the statistical power of the test? Are there data-generating scenarios that the authors did not consider that would be useful to consider? 
+
+The choices the authors have to make:
+1. the number of samples (1000)
+2. the starting values for the maximum likelihood estimates of the parameters
+3. the p values with both the approximation error and truncation error
+4. the number of components in a mixture distribution k=1,2,3
+5. the mean and standard distributin of the normal distributions 
+6. the sample size and the number of samples for each sample
+7. the normial level
+8. the distance between components (if k>=2)
+9. the mixing proportion 0.5, 9.7 and 0.9
+
+The key aspects:
+1. nornimal level
+2. sample size
+4. spacing between the components
+5. mixing proportion
+
+
+• Do their tables do a good job of presenting the simulation results and do you have any alternative suggestions for how to do this? 
+
+Yes, their table presents the simulation results well. 
+
+Alternative suggestions:
+1. For table 1 it would be better to combine (a) and (b) togther, as the nominal levels and samples sizes are the same, similar to table 3.
+2. It is quite comfusing of table 4 as there are two many variables. To make it easier, it might be better to have 6 columns of adjusted and unadjusted results for 3 sample sizes, and 16 rows of different spacing between the components.
+e.g.
+D1 D2 Nominal level 50          100       200
+                    2LR 2LR*  2LR 2LR*  2LR 2LR*
+
+
+• Interpret their tables on power (Tables 2 and 4) - do the results make sense in terms of how the power varies as a function of the data generating mechanism?
+ 
+In table 2, it shows the simulated powers of the adjusted and unadjuestd likelihood ratio tests for different sample sizes, mixing proportions and spacing betweem the two components. The proportion dose not have a significant affects on the power. The power is too small when the spacing is less than 2 and sample size is less than 200. 
+
+In table 4, it shows the simulated power of the adjusted and unadjuested likelihood ratio tests of a mixture of 2 normals vs a mixture of 3 normals with fixed mixing proportions for different spacing, nominal level and sample sizes. The table indicates that the spacing between componets has the most influence on power. The power seems to be low when the sample sizes less than 200.
+
+
+• How do you think the authors decided to use 1000 simulations. Would 10 simulations be enough? How might we decide if 1000 simulations is enough?
+
+1000 simulations seems to be large enough to have a resonable accuracy when the nominal level is 0.01. 10 simulation is not enough. 
+
+It depends on what the level of confidence and accuracy we want. We may check the 500 simulations and 1500 simulations to see if the number of replicants affect the result. If 1000 simulations and 1500 simulations have similar results which means that 1000 simulations is enough. 
+
+
