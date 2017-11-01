@@ -49,7 +49,7 @@ The subprime crisis started after Lehman's failure in mid September 2008, I woul
 
 1. To run the following coade on PySpark in Savio to fileter the lines with key words "lehman_brothers"
 
-```{py eval=FALSE}
+```{r eval=FALSE}
 ##knitr read-filter
 dir = '/global/scratch/paciorek/wikistats_full'
 lines = sc.textFile(dir + '/' + 'dated')
@@ -97,9 +97,8 @@ scp yue_hu@dtn.brc.berkeley.edu:/global/scratch/yue_hu/hhy/part-00000 counts
 ```
 2. analysis the data by R
 
-```{py, eval=FALSE}
-install.packages('readr')
-install.packages('dplyr')
+```{r Lehman analysis}
+
 library(readr)
 library(dplyr)
 Lehman <- readr::read_delim("counts", ",", col_names = FALSE)
@@ -124,6 +123,10 @@ langLehman <- langLehman %>% filter (langLehman$hits >10000)
 pie(c(langLehman$hits),labels = c(langLehman$lang), main = "Lehman website hits by langague")
 
 ```
+Frome the graph, we can see that people were more interested in the Lehman Brothers topic in the mid of October. Moreover, from the pie chart, we can see english, spainish, french, deutsch, italian are the first five language of website to be hitted.
+
+
+
 ## problem 4
 1. use 24 cores
 2. use read_delim to get the lines of each file and use grep() to get the lines with pattern "Barack Obama"
